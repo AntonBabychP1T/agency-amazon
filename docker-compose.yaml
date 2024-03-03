@@ -15,7 +15,7 @@ services:
     depends_on:
       - mongodb
     restart: on-failure
-    image: mongo-db-practice
+    image: amazon-agency
     build: .
     env_file: ./.env
     ports:
@@ -23,7 +23,10 @@ services:
       - ${DEBUG_PORT}:${DEBUG_PORT}
     environment:
       SPRING_APPLICATION_JSON: '{
-          "spring.data.mongodb.uri": "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:${MONGO_DOCKER_PORT}/${MONGO_INITDB_DATABASE}",
-          "spring.data.mongodb.authentication-database":"${MONGO_INITDB_ROOT_USERNAME}"
+          "spring.data.mongodb.uri": "mongodb://admin:password@mongodb:27017/test",
+          "spring.data.mongodb.authentication-database":"admin",
+          "jwt.expiration": "${JWT_EXPIRATION_TIME}",
+          "jwt.secret": "${JWT_SECRET}",
+          "server.servlet.context-path": "/api"
       }'
       _TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
