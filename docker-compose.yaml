@@ -27,6 +27,7 @@ services:
           "spring.data.mongodb.authentication-database":"${MONGO_INITDB_ROOT_USERNAME}",
           "jwt.expiration": "${JWT_EXPIRATION_TIME}",
           "jwt.secret": "${JWT_SECRET}",
+          "path.to.json.file": "${PATH_TO_JSON_FILE}",
           "server.servlet.context-path": "/api"
       }'
       _TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"

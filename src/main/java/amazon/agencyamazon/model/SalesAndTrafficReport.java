@@ -10,17 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class SalesAndTrafficReport {
     @Id
     private String id;
-    private ReportSpecification reportSpecification;
     private List<SalesAndTrafficData> salesAndTrafficByDate;
-
-    @Data
-    public static class ReportSpecification {
-        private String reportType;
-        private ReportOptions reportOptions;
-        private String dataStartTime;
-        private String dataEndTime;
-        private List<String> marketplaceIds;
-    }
 
     @Data
     public static class ReportOptions {
