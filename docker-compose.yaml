@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo
+    restart: unless-stopped
+    env_file: ./.env
+    ports:
+      - ${MONGO_LOCAL_PORT}:${MONGO_DOCKER_PORT}
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: $MONGO_INITDB_ROOT_USERNAME
+      MONGO_INITDB_ROOT_PASSWORD: $MONGO_INITDB_ROOT_PASSWORD
+      MONGO_INITDB_DATABASE: $MONGO_INITDB_DATABASE
+  app:
+    depends_on:
+      - mongodb
+    restart: on-failure
+    image: mongo-db-practice
+    build: .
+    env_file: ./.env
+    ports:
+      - ${SPRING_LOCAL_PORT}:${SPRING_DOCKER_PORT}
+      - ${DEBUG_PORT}:${DEBUG_PORT}
+    environment:
+      SPRING_APPLICATION_JSON: '{
+          "spring.data.mongodb.uri": "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:${MONGO_DOCKER_PORT}/${MONGO_INITDB_DATABASE}",
+          "spring.data.mongodb.authentication-database":"${MONGO_INITDB_ROOT_USERNAME}"
+      }'
+      _TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
