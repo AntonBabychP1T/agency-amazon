@@ -2,7 +2,6 @@ package amazon.agencyamazon.repository;
 
 import amazon.agencyamazon.model.report.SalesAndTrafficByAsin;
 import amazon.agencyamazon.model.report.SalesAndTrafficByDate;
-import amazon.agencyamazon.model.report.SalesAndTrafficWrapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
@@ -32,19 +31,21 @@ public class CustomSalesAndTrafficReportRepositoryImpl implements CustomSalesAnd
     }
 
     @Override
-    public List<SalesAndTrafficWrapper> findByAsins(List<String> asins) {
+    public List<SalesAndTrafficByAsin> findByAsins(List<String> asins) {
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("salesAndTrafficByAsin.parentAsin").in(asins)),
-                Aggregation.group("parentAsin")
-                        .sum("salesAndTrafficByAsin.salesByAsin.orderedProductSales.amount").as("totalSales")
-                        .sum("salesAndTrafficByAsin.trafficByAsin.pageViews").as("totalPageViews"),
-                Aggregation.project("totalSales", "totalPageViews").and("parentAsin").previousOperation()
+                Aggregation.unwind("salesAndTrafficByAsin"),
+                Aggregation.group("salesAndTrafficByAsin.parentAsin")
+                        .first("salesAndTrafficByAsin.salesByAsin").as("salesByAsin")
+                        .first("salesAndTrafficByAsin.trafficByAsin").as("trafficByAsin"),
+                Aggregation.project("parentAsin", "salesByAsin", "trafficByAsin")
         );
-        AggregationResults<SalesAndTrafficWrapper> results = mongoTemplate.aggregate(
-                aggregation, "salesAndTrafficWrapper", SalesAndTrafficWrapper.class
+        AggregationResults<SalesAndTrafficByAsin> results = mongoTemplate.aggregate(
+                aggregation, "salesAndTrafficWrapper", SalesAndTrafficByAsin.class
         );
         return results.getMappedResults();
     }
+
 
     @Cacheable("salesAndTrafficByDate")
     @Override
@@ -52,8 +53,11 @@ public class CustomSalesAndTrafficReportRepositoryImpl implements CustomSalesAnd
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.unwind("salesAndTrafficByDate"),
                 Aggregation.group("salesAndTrafficByDate.date")
-                        .first("salesAndTrafficByDate").as("salesAndTrafficByDate"),
-                Aggregation.project("salesAndTrafficByDate")
+                        .first("salesAndTrafficByDate.salesByDate").as("salesByDate")
+                        .first("salesAndTrafficByDate.trafficByDate").as("trafficByDate"),
+                Aggregation.project().and("salesByDate").as("salesByDate")
+                        .and("trafficByDate").as("trafficByDate")
+                        .and("_id").as("date")
         );
 
         AggregationResults<SalesAndTrafficByDate> results = mongoTemplate.aggregate(
@@ -68,8 +72,11 @@ public class CustomSalesAndTrafficReportRepositoryImpl implements CustomSalesAnd
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.unwind("salesAndTrafficByAsin"),
                 Aggregation.group("salesAndTrafficByAsin.parentAsin")
-                        .first("salesAndTrafficByAsin").as("salesAndTrafficByAsin"),
-                Aggregation.project("salesAndTrafficByAsin")
+                        .first("salesAndTrafficByAsin.salesByAsin").as("salesByAsin")
+                        .first("salesAndTrafficByAsin.trafficByAsin").as("trafficByAsin"),
+                Aggregation.project().and("trafficByAsin").as("trafficByAsin")
+                        .and("salesByAsin").as("salesByAsin")
+                        .and("_id").as("parentAsin")
         );
         AggregationResults<SalesAndTrafficByAsin> results = mongoTemplate.aggregate(
                 aggregation, "salesAndTrafficWrapper", SalesAndTrafficByAsin.class

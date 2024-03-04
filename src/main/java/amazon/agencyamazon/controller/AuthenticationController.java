@@ -6,6 +6,7 @@ import amazon.agencyamazon.dto.user.UserRegistrationRequestDto;
 import amazon.agencyamazon.dto.user.UserResponseDto;
 import amazon.agencyamazon.security.AuthenticationService;
 import amazon.agencyamazon.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +23,15 @@ public class AuthenticationController {
     private final UserService userService;
     private final AuthenticationService authenticationService;
 
+
+    @Operation(summary = "Endpoint to registration new user")
     @PostMapping("/registration")
     public UserResponseDto register(@RequestBody @Valid UserRegistrationRequestDto requestDto) {
         return userService.register(requestDto);
     }
 
+    @Operation(summary = "Endpoint to login for bearer token",
+            description = "Input: email and password, output JWT token")
     @PostMapping("/login")
     public UserLoginResponseDto login(@RequestBody @Valid UserLoginRequestDto requestDto) {
         return authenticationService.authentication(requestDto);
