@@ -3,6 +3,7 @@ package amazon.agencyamazon.service.impl;
 import amazon.agencyamazon.model.report.SalesAndTrafficWrapper;
 import amazon.agencyamazon.repository.SalesAndTrafficReportRepository;
 import amazon.agencyamazon.service.DataParserService;
+import amazon.agencyamazon.service.FileService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import java.io.File;
@@ -10,7 +11,7 @@ import java.io.IOException;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 public class DataParserServiceImpl implements DataParserService {
     private final SalesAndTrafficReportRepository reportRepository;
     private final ObjectMapper objectMapper;
+    private final FileService fileService;
     @Value("${path.to.json.file}")
     private String jsonFilePath;
 
@@ -29,6 +31,7 @@ public class DataParserServiceImpl implements DataParserService {
         saveDataToDb(reportWrapper);
     }
 
+    @Cacheable("salesAndTrafficData")
     @Scheduled(fixedRate = 600000)
     @Override
     public void parseDataFromJsonToDatabase() {
@@ -49,8 +52,7 @@ public class DataParserServiceImpl implements DataParserService {
 
     private SalesAndTrafficWrapper readDataFromJson() {
         try {
-            ClassPathResource resource = new ClassPathResource(jsonFilePath);
-            File file = resource.getFile();
+            File file = fileService.getFile(jsonFilePath);
             return objectMapper
                     .readValue(file, SalesAndTrafficWrapper.class);
         } catch (IOException e) {
